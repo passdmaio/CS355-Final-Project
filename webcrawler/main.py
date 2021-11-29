@@ -1,15 +1,30 @@
 import requests
 from bs4 import BeautifulSoup
+import random
 
-URL = "https://cryptidz.fandom.com/wiki/List_of_Cryptids"
-page = requests.get(URL)
-soup = BeautifulSoup(page.content, "html.parser")
 
-main_tag = soup.findAll('div',{'id':'mw-content-text'})[0]
+def scrapeWikiArticle(url):
+    response = requests.get(url=url,)
 
-headers = main_tag.find_all('h3')
-ui_list = main_tag.find_all('ul')
-for i in range(len(headers)):
-    print(headers[i].span.get_text())
-    print('\n -'.join(ui_list[i].get_text().split('\n')))
-sections = zip((x.span.get_text() for x in headers), ('\n -'.join(x.get_text().split('\n')) for x in ui_list))
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    title = soup.find(id="firstHeading")
+    print(title.text)
+
+    allLinks = soup.find(id="bodyContent").find_all("a")
+    random.shuffle(allLinks)
+    linkToScrape = 0
+
+    for link in allLinks:
+        # We are only interested in other wiki articles
+        if link['href'].find("/wiki/") == -1:
+            continue
+
+        # Use this link to scrape
+        linkToScrape = link
+        break
+
+    scrapeWikiArticle("https://en.wikipedia.org" + linkToScrape['href'])
+
+
+scrapeWikiArticle("https://en.wikipedia.org/wiki/A24_(company)")
