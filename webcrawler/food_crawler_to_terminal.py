@@ -1,9 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas
 
-# def scrape_popular_items(url):
-
+# current bugs: popular food items all fitting into 1 element, long time to scrape?
 
 # url declarations
 root_url = 'https://www.dineinct.com'
@@ -18,6 +16,7 @@ target_page = requests.get(target_url)
 robot_soup = BeautifulSoup(robot_page.content, 'html.parser')
 food_soup = BeautifulSoup(target_page.content, 'html.parser')
 
+deadLinks = ['https://www.dineinct.com/order/restaurant/boston-market-menu/1041/06050', 'https://www.dineinct.com/order/restaurant/boston-market-menu/1054/06050', 'https://www.dineinct.com/order/restaurant/boston-market-menu/1061/06050', 'https://www.dineinct.com/order/restaurant/boston-market-menu/1066/06050', "https://www.dineinct.com/order/restaurant/boston-market-menu/1047/06050", 'https://www.dineinct.com/order/restaurant/jefferson-fry-company---cromwell-menu/1071/06050', 'https://www.dineinct.com/order/restaurant/jefferson-fry-company---canton-menu/986/06050']
 restaurantNames = []
 menuItems = []
 restaurantSites = []
@@ -44,31 +43,30 @@ def get_popular_menu(url):
             menuItems.append(entry_list)
 
 
+# this block will find and collect the list of links to popular restaurant sites in ct
 results = food_soup.find(id="page_container")
 restaurant_elements = results.findAll('div', class_="restaurants--restaurant_listings_row row")
 for element in restaurant_elements:
-    # -- snip --
+    # collects all the links in the a tag
     links = element.find_all("a")
     for link in links:
+        # sets blacklist link state to 0 at beginning of loop
+        cleanLink = True
         link_url = link["href"]
-        #print(f"{link_url}")
+
+        # traverses link blacklist, if one is found, gets skipped.
+        for currentDeadLink in deadLinks:
+            if link_url == currentDeadLink:
+                cleanLink = False
+        if not cleanLink:
+            continue
+        # if the link_url is not found, data is scraped
         get_restaurant_data(link_url)
         try:
-            get_popular_menu(link_url)
+            deadLinks.append(link_url)
+            #get_popular_menu(link_url)
             restaurantSites.append(link_url)
         except AttributeError:
             break
 
-data = list(zip(restaurantSites, restaurantNames, menuItems))
-
-d = pandas.DataFrame(data, columns=["Restaurant Site", "Restaurant Name & Location", "Popular Menu Items & Cost"])
-
-# Writing the data frame to a new Excel File
-try:
-    d.to_excel("output.xlsx")
-except:
-    print("\nSomething went wrong ! Please check code / Internet Connection")
-else:
-    print("\nRestaurant data successfully written to Excel.")
-finally:
-    print("\nQuitting the program. Bye !")
+print(restaurantNames)
