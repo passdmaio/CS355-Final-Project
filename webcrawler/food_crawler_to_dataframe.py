@@ -76,7 +76,7 @@ d = pandas.DataFrame(data, columns=["Restaurant Site", "Restaurant Name & Locati
 
 # Writing the data frame to a new Excel File
 try:
-    d.to_excel("output.xlsx")
+    d.to_excel("demo.xlsx")
 except:
     print("\nSomething went wrong ! Please check code / Internet Connection")
 else:
